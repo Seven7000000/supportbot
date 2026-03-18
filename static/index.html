@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SupportBot - Embeddable AI Customer Support</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        accent: '#6366f1',
+                        dark: { 900: '#0a0a14', 800: '#12121e', 700: '#1a1a2e', 600: '#2d2d44' }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #12121e; }
+        ::-webkit-scrollbar-thumb { background: #6366f1; border-radius: 3px; }
+    </style>
+</head>
+<body class="bg-dark-900 text-gray-300 min-h-screen">
+    <div class="max-w-5xl mx-auto px-4 py-8">
+        <!-- Header -->
+        <div class="text-center mb-10">
+            <h1 class="text-4xl font-bold mb-2">
+                <span class="text-indigo-400">Support</span><span class="text-indigo-300">Bot</span>
+            </h1>
+            <p class="text-gray-500">Embeddable AI-powered customer support chatbot</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Configuration Panel -->
+            <div>
+                <h2 class="text-lg font-semibold text-gray-200 mb-4">Configure Your Bot</h2>
+                <div class="bg-dark-800 rounded-xl border border-dark-600 p-6 space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400 mb-1">Business Name</label>
+                        <input type="text" id="business-name" value="My Awesome Store"
+                               class="w-full bg-dark-700 border border-dark-600 rounded-lg px-4 py-2.5 text-sm text-gray-200 focus:outline-none focus:border-indigo-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400 mb-1">Bot Personality</label>
+                        <select id="personality" class="w-full bg-dark-700 border border-dark-600 rounded-lg px-4 py-2.5 text-sm text-gray-200 focus:outline-none focus:border-indigo-500">
+                            <option value="friendly and helpful">Friendly & Helpful</option>
+                            <option value="professional and formal">Professional & Formal</option>
+                            <option value="casual and witty">Casual & Witty</option>
+                            <option value="empathetic and patient">Empathetic & Patient</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400 mb-1">Primary Color</label>
+                        <div class="flex gap-2">
+                            <input type="color" id="color" value="#6366f1" class="h-10 w-14 bg-transparent border border-dark-600 rounded cursor-pointer">
+                            <input type="text" id="color-text" value="#6366f1"
+                                   class="flex-1 bg-dark-700 border border-dark-600 rounded-lg px-4 py-2.5 text-sm text-gray-200 focus:outline-none focus:border-indigo-500">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-400 mb-1">Knowledge Base <span class="text-gray-600">(what should the bot know?)</span></label>
+                        <textarea id="knowledge" rows="6" placeholder="Enter information about your business, FAQs, policies, etc...&#10;&#10;Example:&#10;- We offer free shipping on orders over $50&#10;- Return policy: 30 days, no questions asked&#10;- Business hours: Mon-Fri 9AM-6PM EST"
+                                  class="w-full bg-dark-700 border border-dark-600 rounded-lg px-4 py-2.5 text-sm text-gray-200 focus:outline-none focus:border-indigo-500 resize-none"></textarea>
+                    </div>
+                    <button onclick="saveConfig()"
+                            class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-medium py-2.5 rounded-lg transition text-sm">
+                        Save Configuration
+                    </button>
+                    <div id="save-status" class="text-center text-sm text-green-400 hidden">Configuration saved!</div>
+                </div>
+
+                <!-- Embed Code -->
+                <h2 class="text-lg font-semibold text-gray-200 mt-8 mb-4">Embed Code</h2>
+                <div class="bg-dark-800 rounded-xl border border-dark-600 p-6">
+                    <p class="text-sm text-gray-400 mb-3">Add this script to any website to embed the chatbot:</p>
+                    <div class="relative">
+                        <pre id="embed-code" class="bg-dark-900 rounded-lg p-4 text-xs text-indigo-300 overflow-x-auto whitespace-pre-wrap break-all"></pre>
+                        <button onclick="copyEmbed()" class="absolute top-2 right-2 bg-dark-600 hover:bg-dark-700 text-gray-400 px-2 py-1 rounded text-xs">Copy</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Live Preview -->
+            <div>
+                <h2 class="text-lg font-semibold text-gray-200 mb-4">Live Preview</h2>
+                <div class="bg-dark-800 rounded-xl border border-dark-600 overflow-hidden" style="height: 580px;">
+                    <div id="preview-header" class="p-4 text-white" style="background: #6366f1;">
+                        <h3 class="font-semibold text-sm" id="preview-name">My Awesome Store</h3>
+                        <p class="text-xs opacity-80 mt-0.5">Ask us anything</p>
+                    </div>
+                    <div id="preview-messages" class="p-4 space-y-3 overflow-y-auto" style="height: 430px;">
+                        <div class="flex justify-start">
+                            <div class="bg-dark-700 rounded-xl rounded-bl-sm px-4 py-2.5 text-sm max-w-[85%]">
+                                Hi! How can I help you today?
+                            </div>
+                        </div>
+                    </div>
+                    <div class="p-3 border-t border-dark-600 flex gap-2">
+                        <input type="text" id="preview-input" placeholder="Type a message..."
+                               class="flex-1 bg-dark-900 border border-dark-600 rounded-lg px-3 py-2 text-sm text-gray-200 focus:outline-none focus:border-indigo-500"
+                               onkeydown="if(event.key==='Enter') sendPreview()">
+                        <button onclick="sendPreview()" id="preview-send-btn" class="bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg px-3 transition">
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let previewHistory = [];
+
+        // Sync color inputs
+        document.getElementById('color').addEventListener('input', e => {
+            document.getElementById('color-text').value = e.target.value;
+        });
+        document.getElementById('color-text').addEventListener('input', e => {
+            document.getElementById('color').value = e.target.value;
+        });
+
+        function getConfig() {
+            return {
+                business_name: document.getElementById('business-name').value,
+                personality: document.getElementById('personality').value,
+                primary_color: document.getElementById('color-text').value,
+                knowledge_base: document.getElementById('knowledge').value,
+            };
+        }
+
+        async function saveConfig() {
+            const config = getConfig();
+            try {
+                const res = await fetch('/configure', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(config)
+                });
+                if (res.ok) {
+                    const status = document.getElementById('save-status');
+                    status.classList.remove('hidden');
+                    setTimeout(() => status.classList.add('hidden'), 2000);
+                    updatePreviewStyle(config);
+                    updateEmbedCode(config);
+                }
+            } catch (e) {
+                alert('Error saving config');
+            }
+        }
+
+        function updatePreviewStyle(config) {
+            document.getElementById('preview-header').style.background = config.primary_color;
+            document.getElementById('preview-name').textContent = config.business_name;
+            document.getElementById('preview-send-btn').style.background = config.primary_color;
+        }
+
+        function updateEmbedCode(config) {
+            const host = window.location.origin;
+            const code = `<script>
+window.SUPPORTBOT_URL = "${host}";
+window.SUPPORTBOT_CONFIG = {
+    business_name: "${config.business_name}",
+    primary_color: "${config.primary_color}"
+};
+<\/script>
+<script src="${host}/widget.js"><\/script>`;
+            document.getElementById('embed-code').textContent = code;
+        }
+
+        function addPreviewMsg(text, isUser) {
+            const container = document.getElementById('preview-messages');
+            const wrapper = document.createElement('div');
+            wrapper.className = 'flex ' + (isUser ? 'justify-end' : 'justify-start');
+            const bubble = document.createElement('div');
+            bubble.className = isUser
+                ? 'rounded-xl rounded-br-sm px-4 py-2.5 text-sm max-w-[85%] text-white'
+                : 'bg-dark-700 rounded-xl rounded-bl-sm px-4 py-2.5 text-sm max-w-[85%]';
+            if (isUser) bubble.style.background = document.getElementById('color-text').value;
+            bubble.textContent = text;
+            wrapper.appendChild(bubble);
+            container.appendChild(wrapper);
+            container.scrollTop = container.scrollHeight;
+            return bubble;
+        }
+
+        async function sendPreview() {
+            const input = document.getElementById('preview-input');
+            const text = input.value.trim();
+            if (!text) return;
+            input.value = '';
+
+            addPreviewMsg(text, true);
+            const typingBubble = addPreviewMsg('Typing...', false);
+            typingBubble.style.opacity = '0.5';
+
+            try {
+                const config = getConfig();
+                const res = await fetch('/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: text, history: previewHistory, config })
+                });
+                const data = await res.json();
+                typingBubble.parentElement.remove();
+                if (data.reply) {
+                    addPreviewMsg(data.reply, false);
+                    previewHistory.push({ role: 'user', content: text });
+                    previewHistory.push({ role: 'assistant', content: data.reply });
+                }
+            } catch (e) {
+                typingBubble.parentElement.remove();
+                addPreviewMsg('Connection error. Please try again.', false);
+            }
+        }
+
+        function copyEmbed() {
+            const code = document.getElementById('embed-code').textContent;
+            navigator.clipboard.writeText(code);
+        }
+
+        // Initialize
+        updateEmbedCode(getConfig());
+        updatePreviewStyle(getConfig());
+    </script>
+</body>
+</html>
